@@ -1,0 +1,57 @@
+version: '3.5'
+
+services:                           #SERVICE1
+  solver_api:
+    build: ../backend/server
+    image: backend-server:latest
+    container_name: solver_api 
+    deploy:
+      mode: replicated
+      replicas: 1
+    restart: always
+    volumes:
+      - ../backend/server:/server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=8001"
+      - "traefik.http.routers.mywebsocket.entrypoints=server1"
+      - "traefik.http.routers.mywebsocket.tls=false"
+      - "traefik.http.routers.mywebsocket.rule=Host(`${HOST}`)"
+
+
+  solver_frontend:                   #SERVICE2
+    build: ../build/frontend_container
+    image: frontend:latest
+    restart: always
+    container_name: frontend #
+    ports:
+      - "8000:8000"
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=8000"
+      - "traefik.http.routers.myrouter.entrypoints=frontend1"
+      - "traefik.http.routers.myrouter.tls=true"
+      - "traefik.http.routers.myrouter.rule=Host(`${HOST}`)"
+
+      
+      
+  traefik:                            #SERVICE3
+    image: traefik:2.3
+    container_name: traefik_router
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    ports:
+      - "8123:8000"      #frontend   Container Port
+      - "8001:8001"      #Solver-api  Container Port
+    command:
+      - "--api.insecure=true"
+      - "--entrypoints.frontend1.address=:8000"
+      - "--entrypoints.server1.address=:8001"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+
+
+
+
