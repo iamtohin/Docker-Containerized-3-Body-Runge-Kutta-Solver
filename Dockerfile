@@ -1,5 +1,6 @@
 FROM python:latest
-RUN pip install websockets
-WORKDIR /usr/src/app
-ADD solver-client.py .
-CMD [ "python3", "solver-client.py" ]
+RUN pip install websockets pandas
+WORKDIR /server/
+ADD solver-api.py .
+EXPOSE 8001
+CMD [ "python3", "-u", "solver-api.py"]
